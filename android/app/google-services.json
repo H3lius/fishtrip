@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "403817711145",
+    "project_id": "fishtrip-f4e5c",
+    "storage_bucket": "fishtrip-f4e5c.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:403817711145:android:c366cb5802c752123e7e38",
+        "android_client_info": {
+          "package_name": "com.amber.fishtrip"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCQ4M6uWIYhfojH8UkjsWtkBatZMFXTFqM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
