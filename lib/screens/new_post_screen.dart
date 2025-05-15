@@ -17,10 +17,8 @@ class _NewPostScreenState extends State<NewPostScreen> {
   File? _selectedImage;
   bool _isLoading = false;
 
-  // Funkcija pasirinkti nuotrauką iš galerijos
   Future<void> _pickImage() async {
     final pickedFile = await ImagePicker().pickImage(source: ImageSource.gallery);
-
     if (pickedFile != null) {
       setState(() {
         _selectedImage = File(pickedFile.path);
@@ -28,9 +26,11 @@ class _NewPostScreenState extends State<NewPostScreen> {
     }
   }
 
-  // Funkcija įkelti postą
   Future<void> _uploadPost() async {
-    if (_selectedImage == null || _descriptionController.text.trim().isEmpty) {
+    final description = _descriptionController.text.trim();
+    final image = _selectedImage;
+
+    if (image == null || description.isEmpty) {
       _showMessage('Pasirinkite nuotrauką ir parašykite aprašymą.');
       return;
     }
@@ -40,43 +40,43 @@ class _NewPostScreenState extends State<NewPostScreen> {
     });
 
     try {
-      // 1. Įkeliame nuotrauką į Firebase Storage
+      // Upload image
       final fileName = '${DateTime.now().millisecondsSinceEpoch}.jpg';
       final ref = FirebaseStorage.instance.ref().child('posts/$fileName');
-      await ref.putFile(_selectedImage!);
-      final imageUrl = await ref.getDownloadURL();
+      await ref.putFile(image);
+      final mediaUrl = await ref.getDownloadURL();
 
-      // 2. Gaunam prisijungusį vartotoją
-      final user = FirebaseAuth.instance.currentUser;
+      // Get user info
+      final user = FirebaseAuth.instance.currentUser!;
+      final userDoc = await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
+      final userData = userDoc.data() ?? {};
 
-      // 3. Gaunam vartotojo vardą iš Firestore
-      final userData = await FirebaseFirestore.instance.collection('users').doc(user!.uid).get();
-      final username = userData['username'];
-
-      // 4. Įkeliame postą į Firestore
+      // Create post document
       await FirebaseFirestore.instance.collection('posts').add({
-        'imageUrl': imageUrl,
-        'description': _descriptionController.text.trim(),
         'userId': user.uid,
-        'username': username,
-        'createdAt': Timestamp.now(),
+        'username': userData['username'] ?? 'nežinomas',
+        'photoUrl': userData['photoUrl'],
+        'mediaUrl': mediaUrl,
+        'type': 'image',
+        'description': description,
         'likes': [],
         'comments': [],
+        'createdAt': Timestamp.now(),
       });
 
       if (!mounted) return;
-
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Įrašas sėkmingai įkeltas!')),
+        const SnackBar(content: Text('Įrašas įkeltas!')),
       );
-
-      Navigator.pop(context); // Grįžta atgal
+      Navigator.pop(context);
     } catch (e) {
       _showMessage('Klaida įkeliant įrašą: $e');
     } finally {
-      setState(() {
-        _isLoading = false;
-      });
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
     }
   }
 

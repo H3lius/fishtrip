@@ -74,7 +74,7 @@ class _MainNavigationState extends State<MainNavigation> {
               icon: const Icon(Icons.map),
               onPressed: () => _onItemTapped(1),
             ),
-            const SizedBox(width: 40),
+            const SizedBox(width: 40), // vieta tarp mygtukų dėl FAB
             IconButton(
               icon: const Icon(Icons.book),
               onPressed: () => _onItemTapped(2),

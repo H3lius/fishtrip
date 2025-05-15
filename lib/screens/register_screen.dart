@@ -40,6 +40,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     }
 
     try {
+      // Patikrinam, ar username nenaudojamas
       final querySnapshot = await FirebaseFirestore.instance
           .collection('users')
           .where('username', isEqualTo: username)
@@ -50,22 +51,30 @@ class _RegisterScreenState extends State<RegisterScreen> {
         return;
       }
 
+      // Sukuriam vartotoją FirebaseAuth'e
       final userCredential = await FirebaseAuth.instance.createUserWithEmailAndPassword(
         email: email,
         password: password,
       );
 
+      final uid = userCredential.user!.uid;
+
+      // 💡 ČIA BUVO TRŪKUMAS — NUSTATOM VARDĄ FirebaseAuth'e
+      await userCredential.user!.updateDisplayName(username);
+
       // Įkeliame nuotrauką į Firebase Storage
       final fileName = '${DateTime.now().millisecondsSinceEpoch}.jpg';
       final ref = FirebaseStorage.instance
           .ref()
-          .child('users/${userCredential.user!.uid}/$fileName');
+          .child('users/$uid/$fileName');
       await ref.putFile(_selectedImage!);
       final photoUrl = await ref.getDownloadURL();
 
-      await FirebaseFirestore.instance.collection('users').doc(userCredential.user!.uid).set({
-        'username': username,
+      // Įrašome duomenis į Firestore
+      await FirebaseFirestore.instance.collection('users').doc(uid).set({
+        'uid': uid,
         'email': email,
+        'username': username,
         'photoUrl': photoUrl,
         'createdAt': Timestamp.now(),
       });
@@ -74,7 +83,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
       _showMessage('Registracija sėkminga!', isSuccess: true);
 
-      // Palauk 2 sekundes ir grįžk į login
       Future.delayed(const Duration(seconds: 2), () {
         Navigator.pushReplacement(
           context,
